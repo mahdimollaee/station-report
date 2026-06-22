@@ -23,14 +23,16 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
 .screen.active { display: block; }
 .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
 .form-control { width: 100%; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-family: 'Vazirmatn', sans-serif; }
+.form-control:focus { outline: none; border-color: var(--primary); }
 .btn { padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-family: 'Vazirmatn', sans-serif; }
 .btn-primary { background: var(--primary); color: white; }
 .btn-success { background: var(--accent); color: white; }
 .btn-danger { background: var(--danger); color: white; }
+.btn-warning { background: #f39c12; color: white; }
 #map { height: 650px; border-radius: 12px; }
 .offline-banner { background: var(--accent2); color: white; text-align: center; padding: 8px; font-size: 14px; display: none; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; }
-.modal { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 420px; }
+.modal { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
 .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 30px; color: white; z-index: 10000; display: none; }
 .desktop-sidebar { width: 240px; background: #1c2833; color: white; padding: 20px 0; min-height: 100vh; }
 .sidebar-item { padding: 14px 20px; cursor: pointer; border: none; background: transparent; color: white; width: 100%; text-align: right; font-family: 'Vazirmatn', sans-serif; font-size: 16px; }
@@ -42,6 +44,10 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
 #desktopPanel { display: none; flex-direction: row; height: 100vh; }
 #mobileApp { display: none; }
 #loginScreen { display: block; }
+.report-photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.report-photos img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+.welcome-text { font-size: 18px; font-weight: 600; color: white; }
+.logout-btn { background: transparent; border: 1px solid white; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -52,11 +58,12 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
   <!-- Login -->
   <div id="loginScreen" class="screen active">
     <div class="card" style="max-width:420px;margin:100px auto;padding:32px;">
-      <h2 style="text-align:center;color:var(--primary);">پنل مدیریت</h2>
-      <input type="email" id="email" class="form-control" placeholder="ایمیل">
-      <input type="password" id="password" class="form-control" placeholder="رمز عبور">
+      <h2 style="text-align:center;color:var(--primary);">سامانه بازدید ایستگاه‌ها</h2>
+      <p style="text-align:center;color:#666;margin-bottom:20px;">لطفاً وارد شوید</p>
+      <input type="text" id="loginUsername" class="form-control" placeholder="نام کاربری">
+      <input type="password" id="loginPassword" class="form-control" placeholder="رمز عبور">
       <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="loginUser()">ورود</button>
-      <button class="btn" style="width:100%;margin-top:10px;background:#eee;" onclick="skipToMobile()">ورود به نسخه موبایل</button>
+      <button class="btn" style="width:100%;margin-top:10px;background:#eee;" onclick="skipToMobile()">ورود بدون ثبت‌نام (مهمان)</button>
     </div>
   </div>
 
@@ -67,20 +74,18 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
       <button onclick="switchToDesktop()" style="color:white;background:transparent;border:1px solid white;padding:6px 12px;border-radius:6px;cursor:pointer;">🖥️ پنل مدیر</button>
     </div>
 
+    <!-- Welcome Bar -->
+    <div id="welcomeBar" style="background:var(--primary);color:white;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1);">
+      <span id="welcomeText" class="welcome-text">👋 خوش آمدید!</span>
+      <button onclick="logoutMobile()" class="logout-btn">🚪 خروج</button>
+    </div>
+
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showTab('home')">🏠 خانه</button>
-      <button class="nav-tab" onclick="showTab('report')">📝 ثبت گزارش</button>
+      <button class="nav-tab active" onclick="showTab('report')">📝 ثبت گزارش</button>
       <button class="nav-tab" onclick="showTab('myreports')">📋 گزارش‌های من</button>
     </div>
 
-    <div id="screen-home" class="screen active">
-      <div class="card">
-        <label>نام و نام خانوادگی</label>
-        <input type="text" id="visitorName" class="form-control" oninput="saveVisitorName()" placeholder="نام خود را وارد کنید">
-      </div>
-    </div>
-
-    <div id="screen-report" class="screen">
+    <div id="screen-report" class="screen active">
       <div id="step1">
         <div class="card">
           <h3>انتخاب ایستگاه</h3>
@@ -98,12 +103,8 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
           <input type="text" id="visitDate" class="form-control">
         </div>
         <div class="card">
-          <label>وضعیت کلی</label>
-          <select id="overallStatus" class="form-control">
-            <option value="خوب">✅ خوب</option>
-            <option value="متوسط">⚠️ متوسط</option>
-            <option value="بد">❌ بد</option>
-          </select>
+          <label>توضیحات کارشناس</label>
+          <textarea id="expertDescription" class="form-control" rows="4" placeholder="مشاهدات، مشکلات، پیشنهادات و ... را وارد کنید" style="resize:vertical;"></textarea>
         </div>
         <div class="card">
           <label>عکس (حداکثر ۵)</label>
@@ -186,6 +187,26 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
   </div>
 </div>
 
+<!-- Edit Report Modal -->
+<div id="editReportModal" class="modal-overlay">
+  <div class="modal">
+    <h3 id="editModalTitle">ویرایش گزارش</h3>
+    <input type="hidden" id="editReportId">
+    <div class="card">
+      <label>تاریخ بازدید</label>
+      <input type="text" id="editVisitDate" class="form-control">
+    </div>
+    <div class="card">
+      <label>توضیحات کارشناس</label>
+      <textarea id="editDescription" class="form-control" rows="4" style="resize:vertical;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-success" onclick="updateReport()">💾 ذخیره تغییرات</button>
+      <button class="btn" onclick="closeEditModal()" style="background:#eee;">انصراف</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -202,67 +223,98 @@ let selectedStation = null;
 let selectedPhotos = [];
 let map = null;
 let isOnline = navigator.onLine;
+let currentUser = null;
+let editingReportId = null;
 
-// ============== توابع لاگین ==============
+// ============== سیستم کاربری ==============
+
+// لیست کاربران مجاز (می‌تونی این رو به دیتابیس هم منتقل کنی)
+const USERS = {
+  'کارشناس1': '123456',
+  'کارشناس2': '123456',
+  'کارشناس3': '123456',
+  'مدیر': 'admin123'
+};
+
 function loginUser() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
   
-  if (!email || !password) {
-    showToast('لطفاً ایمیل و رمز عبور را وارد کنید', 'error');
+  if (!username || !password) {
+    showToast('لطفاً نام کاربری و رمز عبور را وارد کنید', 'error');
     return;
   }
 
-  supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  }).then(({ data, error }) => {
-    if (error) {
-      console.error('❌ خطای ورود:', error);
-      showToast('خطا: ' + error.message, 'error');
-      return;
-    }
-    
-    console.log('✅ ورود موفق:', data);
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('desktopPanel').style.display = 'flex';
-    document.getElementById('desktopPanel').classList.add('active');
-    initDesktop();
-    showToast('ورود موفق ✅', 'success');
-  }).catch(e => {
-    console.error('❌ خطا:', e);
-    showToast('خطا: ' + e.message, 'error');
-  });
+  // بررسی کاربر در لیست
+  if (USERS[username] && USERS[username] === password) {
+    currentUser = username;
+    localStorage.setItem('currentUser', username);
+    showToast('✅ خوش آمدید ' + username, 'success');
+    enterApp();
+  } else {
+    showToast('❌ نام کاربری یا رمز عبور اشتباه است', 'error');
+  }
 }
 
 function skipToMobile() {
+  currentUser = 'مهمان';
+  localStorage.setItem('currentUser', 'مهمان');
+  enterApp();
+}
+
+function enterApp() {
   document.getElementById('loginScreen').classList.remove('active');
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mobileApp').style.display = 'block';
   document.getElementById('mobileApp').classList.add('active');
+  
+  // نمایش نام کاربر
+  const welcomeText = document.getElementById('welcomeText');
+  if (currentUser === 'مهمان') {
+    welcomeText.textContent = '👋 خوش آمدید (مهمان)';
+  } else {
+    welcomeText.textContent = '👋 خوش آمدید ' + currentUser;
+  }
+  
   initMobile();
+}
+
+function logoutMobile() {
+  currentUser = null;
+  localStorage.removeItem('currentUser');
+  location.reload();
 }
 
 // ============== توابع اولیه ==============
 function initMobile() { 
   loadStations(); 
-  loadReports(); 
+  loadUserReports(); 
   setDefaultDateTime(); 
-  const savedName = localStorage.getItem('visitorName') || '';
-  document.getElementById('visitorName').value = savedName;
 }
 
 function initDesktop() { 
   loadStations(); 
-  loadReports(); 
+  loadAllReports(); 
   setTimeout(initMap, 500);
 }
 
 // ============== راه‌اندازی اولیه ==============
 window.onload = function() {
   setupOnlineDetection();
-  document.getElementById('loginScreen').classList.add('active');
+  
+  // بررسی کاربر ذخیره شده
+  const savedUser = localStorage.getItem('currentUser');
+  if (savedUser && USERS[savedUser]) {
+    currentUser = savedUser;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mobileApp').style.display = 'block';
+    document.getElementById('mobileApp').classList.add('active');
+    const welcomeText = document.getElementById('welcomeText');
+    welcomeText.textContent = '👋 خوش آمدید ' + currentUser;
+    initMobile();
+  } else {
+    document.getElementById('loginScreen').classList.add('active');
+  }
 };
 
 // ============== توابع اصلی ==============
@@ -287,11 +339,6 @@ function showTab(tab) {
   if (target) target.classList.add('active');
 }
 
-function saveVisitorName() { 
-  const name = document.getElementById('visitorName').value;
-  localStorage.setItem('visitorName', name); 
-}
-
 function setDefaultDateTime() { 
   const now = new Date();
   const dateStr = now.toLocaleDateString('fa-IR');
@@ -300,26 +347,49 @@ function setDefaultDateTime() {
 }
 
 function loadStations() {
+  console.log('🔄 در حال بارگذاری ایستگاه‌ها...');
   supabaseClient.from('stations').select('*').order('name').then(({ data, error }) => {
     if (error) {
       console.error('❌ خطا در بارگذاری ایستگاه‌ها:', error);
+      showToast('خطا در بارگذاری ایستگاه‌ها', 'error');
       return;
     }
     allStations = data || [];
+    console.log('✅ تعداد ایستگاه‌ها:', allStations.length);
     renderStationsList();
     renderStationsTable();
     if (map) renderMarkers();
   });
 }
 
-function loadReports() {
+function loadUserReports() {
+  if (!currentUser || currentUser === 'مهمان') {
+    allReports = [];
+    renderMyReports();
+    return;
+  }
+  
+  supabaseClient.from('reports')
+    .select('*')
+    .eq('visitor', currentUser)
+    .order('created_at', { ascending: false })
+    .then(({ data, error }) => {
+      if (error) {
+        console.error('❌ خطا در بارگذاری گزارش‌ها:', error);
+        return;
+      }
+      allReports = data || [];
+      renderMyReports();
+    });
+}
+
+function loadAllReports() {
   supabaseClient.from('reports').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
     if (error) {
-      console.error('❌ خطا در بارگذاری گزارش‌ها:', error);
+      console.error('❌ خطا در بارگذاری همه گزارش‌ها:', error);
       return;
     }
     allReports = data || [];
-    renderMyReports();
     renderAllReports();
   });
 }
@@ -335,9 +405,15 @@ function renderStationsList(filter = '') {
   );
   const container = document.getElementById('stationsList');
   if (!container) return;
+  
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="card" style="text-align:center;color:#999;">هیچ ایستگاهی پیدا نشد</div>';
+    return;
+  }
+  
   container.innerHTML = filtered.map(s => `
     <div class="card" onclick="selectStation('${s.id}')" style="cursor:pointer;">
-      <strong>${s.name || 'بدون نام'}</strong><br>کد: ${s.code || '---'}
+      <strong>${s.name || 'بدون نام'}</strong><br>کد: ${s.code || '---'} | ${s.province || ''}
     </div>
   `).join('');
 }
@@ -370,25 +446,29 @@ function submitReport() {
     return;
   }
   
-  const visitor = localStorage.getItem('visitorName') || 'ناشناس';
+  if (!currentUser || currentUser === 'مهمان') {
+    showToast('لطفاً ابتدا وارد شوید', 'error');
+    return;
+  }
+  
   const visitDate = document.getElementById('visitDate').value || new Date().toLocaleDateString('fa-IR');
-  const overallStatus = document.getElementById('overallStatus').value || 'خوب';
+  const description = document.getElementById('expertDescription').value.trim() || 'بدون توضیحات';
 
   const report = {
     station_id: selectedStation.id,
     station_name: selectedStation.name || 'بدون نام',
     station_code: selectedStation.code || '---',
-    visitor: visitor,
+    visitor: currentUser,
     visit_date: visitDate,
-    overall_status: overallStatus,
+    description: description,
     created_at: new Date().toISOString(),
     photos: []
   };
 
   if (!isOnline) {
-    let offline = JSON.parse(localStorage.getItem('offline_reports') || '[]');
+    let offline = JSON.parse(localStorage.getItem('offline_reports_' + currentUser) || '[]');
     offline.push(report);
-    localStorage.setItem('offline_reports', JSON.stringify(offline));
+    localStorage.setItem('offline_reports_' + currentUser, JSON.stringify(offline));
     showToast('گزارش ذخیره شد (آفلاین)', 'success');
     resetReportForm();
     return;
@@ -412,7 +492,7 @@ function submitReport() {
     if (error) throw error;
     showToast('گزارش ثبت شد ✅', 'success');
     resetReportForm();
-    loadReports();
+    loadUserReports();
   }).catch(e => {
     showToast('خطا در ثبت: ' + e.message, 'error');
   });
@@ -422,11 +502,14 @@ function resetReportForm() {
   selectedPhotos = [];
   document.getElementById('photoPreviews').innerHTML = '';
   document.getElementById('photoInput').value = '';
+  document.getElementById('expertDescription').value = '';
   backToStep1();
 }
 
 function syncOfflineReports() {
-  let offline = JSON.parse(localStorage.getItem('offline_reports') || '[]');
+  if (!currentUser || currentUser === 'مهمان') return;
+  
+  let offline = JSON.parse(localStorage.getItem('offline_reports_' + currentUser) || '[]');
   if (!offline.length) return;
   let count = 0;
   const promises = offline.map(r => {
@@ -437,23 +520,37 @@ function syncOfflineReports() {
   
   Promise.all(promises).then(() => {
     if (count > 0) {
-      localStorage.removeItem('offline_reports');
+      localStorage.removeItem('offline_reports_' + currentUser);
       showToast(`${count} گزارش آفلاین ارسال شد`, 'success');
-      loadReports();
+      loadUserReports();
     }
   });
 }
 
 function renderMyReports() {
-  const visitor = localStorage.getItem('visitorName') || '';
-  const list = allReports.filter(r => r.visitor === visitor);
   const container = document.getElementById('myReportsList');
   if (!container) return;
-  container.innerHTML = list.map(r => `
+  
+  if (!currentUser || currentUser === 'مهمان') {
+    container.innerHTML = '<div class="card" style="text-align:center;color:#999;">لطفاً وارد شوید تا گزارش‌های خود را ببینید</div>';
+    return;
+  }
+  
+  if (allReports.length === 0) {
+    container.innerHTML = '<div class="card" style="text-align:center;color:#999;">هیچ گزارشی ثبت نشده است</div>';
+    return;
+  }
+  
+  container.innerHTML = allReports.map(r => `
     <div class="card">
       <strong>${r.station_name || 'بدون نام'}</strong><br>
-      ${r.visit_date || '---'} — ${r.overall_status || 'نامشخص'}
-      ${r.photos && r.photos.length > 0 ? `<br>📸 ${r.photos.length} عکس` : ''}
+      تاریخ: ${r.visit_date || '---'}<br>
+      توضیحات: ${r.description || 'بدون توضیحات'}<br>
+      ${r.photos && r.photos.length > 0 ? `<div class="report-photos">${r.photos.map(p => `<img src="${p}" alt="عکس">`).join('')}</div>` : ''}
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-warning" onclick="openEditReport('${r.id}')" style="padding:4px 12px;font-size:12px;">✏️ ویرایش</button>
+        <button class="btn btn-danger" onclick="deleteReport('${r.id}')" style="padding:4px 12px;font-size:12px;">🗑️ حذف</button>
+      </div>
     </div>
   `).join('');
 }
@@ -461,14 +558,99 @@ function renderMyReports() {
 function renderAllReports() {
   const container = document.getElementById('allReportsList');
   if (!container) return;
+  
+  if (allReports.length === 0) {
+    container.innerHTML = '<div class="card" style="text-align:center;color:#999;">هیچ گزارشی ثبت نشده است</div>';
+    return;
+  }
+  
   container.innerHTML = allReports.map(r => `
     <div class="card">
       <strong>${r.station_name || 'بدون نام'}</strong><br>
       بازدیدکننده: ${r.visitor || 'ناشناس'}<br>
-      تاریخ: ${r.visit_date || '---'} — وضعیت: ${r.overall_status || 'نامشخص'}
-      ${r.photos && r.photos.length > 0 ? `<br>📸 ${r.photos.length} عکس` : ''}
+      تاریخ: ${r.visit_date || '---'}<br>
+      توضیحات: ${r.description || 'بدون توضیحات'}<br>
+      ${r.photos && r.photos.length > 0 ? `<div class="report-photos">${r.photos.map(p => `<img src="${p}" alt="عکس">`).join('')}</div>` : ''}
     </div>
   `).join('');
+}
+
+// ============== ویرایش و حذف گزارش ==============
+
+function openEditReport(reportId) {
+  const report = allReports.find(r => r.id === reportId);
+  if (!report) {
+    showToast('گزارش پیدا نشد', 'error');
+    return;
+  }
+  
+  // فقط کاربر خودش می‌تونه ویرایش کنه
+  if (report.visitor !== currentUser) {
+    showToast('شما اجازه ویرایش این گزارش را ندارید', 'error');
+    return;
+  }
+  
+  editingReportId = reportId;
+  document.getElementById('editReportId').value = reportId;
+  document.getElementById('editVisitDate').value = report.visit_date || '';
+  document.getElementById('editDescription').value = report.description || '';
+  document.getElementById('editModalTitle').textContent = 'ویرایش گزارش - ' + report.station_name;
+  document.getElementById('editReportModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+  document.getElementById('editReportModal').style.display = 'none';
+  editingReportId = null;
+}
+
+function updateReport() {
+  if (!editingReportId) {
+    showToast('خطا در ویرایش', 'error');
+    return;
+  }
+  
+  const visitDate = document.getElementById('editVisitDate').value;
+  const description = document.getElementById('editDescription').value.trim() || 'بدون توضیحات';
+  
+  supabaseClient.from('reports')
+    .update({
+      visit_date: visitDate,
+      description: description
+    })
+    .eq('id', editingReportId)
+    .then(({ error }) => {
+      if (error) {
+        showToast('خطا در ویرایش: ' + error.message, 'error');
+        return;
+      }
+      showToast('گزارش ویرایش شد ✅', 'success');
+      closeEditModal();
+      loadUserReports();
+    });
+}
+
+function deleteReport(reportId) {
+  const report = allReports.find(r => r.id === reportId);
+  if (!report) return;
+  
+  if (report.visitor !== currentUser) {
+    showToast('شما اجازه حذف این گزارش را ندارید', 'error');
+    return;
+  }
+  
+  if (!confirm('آیا از حذف این گزارش اطمینان دارید؟')) return;
+  
+  supabaseClient.from('reports')
+    .delete()
+    .eq('id', reportId)
+    .then(({ error }) => {
+      if (error) {
+        showToast('خطا در حذف: ' + error.message, 'error');
+        return;
+      }
+      showToast('گزارش حذف شد', 'success');
+      loadUserReports();
+    });
 }
 
 // ============== توابع دسکتاپ ==============
@@ -480,6 +662,9 @@ function showDesktopScreen(id) {
   
   if (id === 'd-map') {
     setTimeout(initMap, 300);
+  }
+  if (id === 'd-reports') {
+    loadAllReports();
   }
 }
 
@@ -520,7 +705,9 @@ function showStationReports(s) {
   } else {
     reports.forEach(r => {
       html += `<div style="padding:10px;background:#f8f9fa;margin:6px 0;border-radius:8px;">
-        ${r.visit_date || '---'} - ${r.visitor || 'ناشناس'} - ${r.overall_status || 'نامشخص'}
+        ${r.visit_date || '---'} - ${r.visitor || 'ناشناس'}<br>
+        <strong>توضیحات:</strong> ${r.description || 'بدون توضیحات'}
+        ${r.photos && r.photos.length > 0 ? `<br><div class="report-photos">${r.photos.map(p => `<img src="${p}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;">`).join('')}</div>` : ''}
       </div>`;
     });
   }
@@ -658,6 +845,7 @@ function logout() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeModal();
+    closeEditModal();
   }
 });
 
