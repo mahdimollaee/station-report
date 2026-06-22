@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سامانه بازدید ایستگاه‌ها</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #1a5276; --accent: #27ae60; --danger: #e74c3c; --accent2: #e67e22;
+}
+body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833; }
+.header, .desktop-header { background: var(--primary); color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+.nav-tabs { display: flex; background: var(--primary); }
+.nav-tab { flex: 1; padding: 12px; text-align: center; color: rgba(255,255,255,0.8); cursor: pointer; border: none; background: transparent; font-family: 'Vazirmatn', sans-serif; font-size: 14px; }
+.nav-tab.active { color: white; background: rgba(255,255,255,0.15); }
+.screen { display: none; }
+.screen.active { display: block; }
+.card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+.form-control { width: 100%; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-family: 'Vazirmatn', sans-serif; }
+.btn { padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-family: 'Vazirmatn', sans-serif; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: var(--accent); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+#map { height: 650px; border-radius: 12px; }
+.offline-banner { background: var(--accent2); color: white; text-align: center; padding: 8px; font-size: 14px; display: none; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; }
+.modal { background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 420px; }
+.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 30px; color: white; z-index: 10000; display: none; }
+.desktop-sidebar { width: 240px; background: #1c2833; color: white; padding: 20px 0; min-height: 100vh; }
+.sidebar-item { padding: 14px 20px; cursor: pointer; border: none; background: transparent; color: white; width: 100%; text-align: right; font-family: 'Vazirmatn', sans-serif; font-size: 16px; }
+.sidebar-item.active, .sidebar-item:hover { background: rgba(255,255,255,0.1); }
+.desktop-main { flex: 1; padding: 24px; overflow-y: auto; }
+.desktop-table { width: 100%; border-collapse: collapse; background: white; }
+.desktop-table th { background: var(--primary); color: white; padding: 12px; text-align: right; }
+.desktop-table td { padding: 12px; border-bottom: 1px solid #ddd; }
+#desktopPanel { display: none; flex-direction: row; height: 100vh; }
+#mobileApp { display: none; }
+#loginScreen { display: block; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="offlineBanner" class="offline-banner">📵 آفلاین — گزارش‌ها پس از اتصال ارسال می‌شوند</div>
+
+  <!-- Login -->
+  <div id="loginScreen" class="screen active">
+    <div class="card" style="max-width:420px;margin:100px auto;padding:32px;">
+      <h2 style="text-align:center;color:var(--primary);">پنل مدیریت</h2>
+      <input type="email" id="email" class="form-control" placeholder="ایمیل">
+      <input type="password" id="password" class="form-control" placeholder="رمز عبور">
+      <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="window.loginUser()">ورود</button>
+      <button class="btn" style="width:100%;margin-top:10px;background:#eee;" onclick="window.skipToMobile()">ورود به نسخه موبایل</button>
+    </div>
+  </div>
+
+  <!-- Mobile App -->
+  <div id="mobileApp" class="screen">
+    <div class="header">
+      <div>🌦️ سامانه بازدید ایستگاه</div>
+      <button onclick="switchToDesktop()" style="color:white;background:transparent;border:1px solid white;padding:6px 12px;border-radius:6px;cursor:pointer;">🖥️ پنل مدیر</button>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="window.showTab('home')">🏠 خانه</button>
+      <button class="nav-tab" onclick="window.showTab('report')">📝 ثبت گزارش</button>
+      <button class="nav-tab" onclick="window.showTab('myreports')">📋 گزارش‌های من</button>
+    </div>
+
+    <div id="screen-home" class="screen active">
+      <div class="card">
+        <label>نام و نام خانوادگی</label>
+        <input type="text" id="visitorName" class="form-control" oninput="window.saveVisitorName()" placeholder="نام خود را وارد کنید">
+      </div>
+    </div>
+
+    <div id="screen-report" class="screen">
+      <div id="step1">
+        <div class="card">
+          <h3>انتخاب ایستگاه</h3>
+          <input type="text" class="form-control" placeholder="جستجو..." oninput="window.filterStations(this.value)">
+          <div id="stationsList"></div>
+        </div>
+      </div>
+      <div id="step2" style="display:none;">
+        <div class="card">
+          <h3 id="selectedStationName"></h3>
+          <button class="btn" onclick="window.backToStep1()" style="background:#eee;">تغییر ایستگاه</button>
+        </div>
+        <div class="card">
+          <label>تاریخ بازدید</label>
+          <input type="text" id="visitDate" class="form-control">
+        </div>
+        <div class="card">
+          <label>وضعیت کلی</label>
+          <select id="overallStatus" class="form-control">
+            <option value="خوب">✅ خوب</option>
+            <option value="متوسط">⚠️ متوسط</option>
+            <option value="بد">❌ بد</option>
+          </select>
+        </div>
+        <div class="card">
+          <label>عکس (حداکثر ۵)</label>
+          <input type="file" id="photoInput" multiple accept="image/*" onchange="window.handlePhotos(this)">
+          <div id="photoPreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+        </div>
+        <button class="btn btn-success" style="width:100%;padding:14px;font-size:16px;" onclick="window.submitReport()">✅ ثبت و ارسال گزارش</button>
+      </div>
+    </div>
+
+    <div id="screen-myreports" class="screen">
+      <div id="myReportsList"></div>
+    </div>
+  </div>
+
+  <!-- Desktop Admin -->
+  <div id="desktopPanel" class="screen">
+    <div class="desktop-sidebar">
+      <button class="sidebar-item active" onclick="window.showDesktopScreen('d-stations')">📍 مدیریت ایستگاه‌ها</button>
+      <button class="sidebar-item" onclick="window.showDesktopScreen('d-map')">🗺️ نقشه ایستگاه‌ها</button>
+      <button class="sidebar-item" onclick="window.showDesktopScreen('d-reports')">📋 همه گزارش‌ها</button>
+      <button class="sidebar-item" onclick="window.logout()" style="color:#ff6b6b;">🚪 خروج</button>
+    </div>
+    <div class="desktop-main">
+      <!-- Stations -->
+      <div id="d-stations" class="screen active">
+        <h2>مدیریت ایستگاه‌ها</h2>
+        <button class="btn btn-primary" onclick="window.openAddStationModal()">➕ افزودن ایستگاه</button>
+        <button class="btn" onclick="document.getElementById('excelInput').click()" style="background:#27ae60;color:white;">📊 آپلود Excel</button>
+        <input type="file" id="excelInput" style="display:none" onchange="window.importExcel(this)">
+        <table class="desktop-table">
+          <thead>
+            <tr>
+              <th>نام</th>
+              <th>کد</th>
+              <th>نوع</th>
+              <th>استان</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody id="stationsTableBodyContent"></tbody>
+        </table>
+      </div>
+
+      <!-- Map -->
+      <div id="d-map" class="screen">
+        <h2>🗺️ نقشه ایستگاه‌ها</h2>
+        <div id="map"></div>
+        <div id="map-station-info" style="margin-top:20px;background:white;padding:16px;border-radius:12px;"></div>
+      </div>
+
+      <!-- Reports -->
+      <div id="d-reports" class="screen">
+        <h2>📋 همه گزارش‌ها</h2>
+        <div id="allReportsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Station Modal -->
+<div id="stationModal" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modalTitle">افزودن ایستگاه جدید</h3>
+    <input type="hidden" id="editId">
+    <input type="text" id="stName" class="form-control" placeholder="نام ایستگاه">
+    <input type="text" id="stCode" class="form-control" placeholder="کد ایستگاه">
+    <select id="stType" class="form-control">
+      <option value="weather">هواشناسی</option>
+      <option value="hydro">هیدرومتری</option>
+      <option value="both">هر دو</option>
+    </select>
+    <input type="text" id="stProvince" class="form-control" placeholder="استان">
+    <input type="number" id="stLat" class="form-control" placeholder="عرض جغرافیایی">
+    <input type="number" id="stLon" class="form-control" placeholder="طول جغرافیایی">
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-success" onclick="window.saveStation()">ذخیره</button>
+      <button class="btn" onclick="window.closeModal()" style="background:#eee;">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ============== تعریف Supabase ==============
+const SUPABASE_URL = 'https://werfmylhtmknecsyikvp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlcmZteWxodG1rbmVjc3lpa3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTYwNzAsImV4cCI6MjA5NzY5MjA3MH0.bCenZffv_P9bD-A7T_iezkbuO4mBnzky-RgkiTuQCoo';
+
+// بررسی وجود Supabase
+if (typeof supabase === 'undefined') {
+  console.error('❌ Supabase لود نشد!');
+}
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============== متغیرهای عمومی ==============
+let allStations = [];
+let allReports = [];
+let selectedStation = null;
+let selectedPhotos = [];
+let map = null;
+let isOnline = navigator.onLine;
+
+// ============== توابع عمومی ==============
+
+// توابع لاگین
+window.loginUser = async function() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  
+  if (!email || !password) {
+    window.showToast('لطفاً ایمیل و رمز عبور را وارد کنید', 'error');
+    return;
+  }
+
+  try {
+    console.log('🔐 در حال ورود با:', email);
+    
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    
+    if (error) {
+      console.error('❌ خطای ورود:', error);
+      window.showToast('خطا: ' + error.message, 'error');
+      return;
+    }
+    
+    console.log('✅ ورود موفق:', data);
+    
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('desktopPanel').style.display = 'flex';
+    document.getElementById('desktopPanel').classList.add('active');
+    
+    window.initDesktop();
+    window.showToast('ورود موفق ✅', 'success');
+    
+  } catch(e) {
+    console.error('❌ خطا:', e);
+    window.showToast('خطا: ' + e.message, 'error');
+  }
+};
+
+window.skipToMobile = function() {
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mobileApp').style.display = 'block';
+  document.getElementById('mobileApp').classList.add('active');
+  window.initMobile();
+};
+
+// توابع اولیه
+window.initMobile = function() { 
+  window.loadStations(); 
+  window.loadReports(); 
+  window.setDefaultDateTime(); 
+  const savedName = localStorage.getItem('visitorName') || '';
+  document.getElementById('visitorName').value = savedName;
+};
+
+window.initDesktop = function() { 
+  window.loadStations(); 
+  window.loadReports(); 
+  setTimeout(window.initMap, 500);
+};
+
+// ============== راه‌اندازی اولیه ==============
+window.onload = function() {
+  window.setupOnlineDetection();
+  document.getElementById('loginScreen').classList.add('active');
+};
+
+// ============== توابع اصلی ==============
+
+window.setupOnlineDetection = function() {
+  const banner = document.getElementById('offlineBanner');
+  function update() {
+    isOnline = navigator.onLine;
+    if (banner) {
+      banner.style.display = isOnline ? 'none' : 'block';
+    }
+    if (isOnline) window.syncOfflineReports();
+  }
+  window.addEventListener('online', update);
+  window.addEventListener('offline', update);
+  update();
+};
+
+window.showTab = function(tab) {
+  document.querySelectorAll('#mobileApp .screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + tab);
+  if (target) target.classList.add('active');
+};
+
+window.saveVisitorName = function() { 
+  const name = document.getElementById('visitorName').value;
+  localStorage.setItem('visitorName', name); 
+};
+
+window.setDefaultDateTime = function() { 
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fa-IR');
+  const el = document.getElementById('visitDate');
+  if (el) el.value = dateStr; 
+};
+
+window.loadStations = async function() {
+  try {
+    const { data, error } = await supabaseClient.from('stations').select('*').order('name');
+    if (error) throw error;
+    allStations = data || [];
+    window.renderStationsList();
+    window.renderStationsTable();
+    if (map) window.renderMarkers();
+  } catch(e) {
+    console.error('❌ خطا در بارگذاری ایستگاه‌ها:', e);
+  }
+};
+
+window.loadReports = async function() {
+  try {
+    const { data, error } = await supabaseClient.from('reports').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    allReports = data || [];
+    window.renderMyReports();
+    window.renderAllReports();
+  } catch(e) {
+    console.error('❌ خطا در بارگذاری گزارش‌ها:', e);
+  }
+};
+
+window.filterStations = function(filter) {
+  window.renderStationsList(filter);
+};
+
+window.renderStationsList = function(filter = '') {
+  const filtered = allStations.filter(s => 
+    (s.name && s.name.includes(filter)) || 
+    (s.code && s.code.includes(filter))
+  );
+  const container = document.getElementById('stationsList');
+  if (!container) return;
+  container.innerHTML = filtered.map(s => `
+    <div class="card" onclick="window.selectStation('${s.id}')" style="cursor:pointer;">
+      <strong>${s.name || 'بدون نام'}</strong><br>کد: ${s.code || '---'}
+    </div>
+  `).join('');
+};
+
+window.selectStation = function(id) {
+  selectedStation = allStations.find(s => s.id === id);
+  if (!selectedStation) return;
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = 'block';
+  document.getElementById('selectedStationName').textContent = selectedStation.name || 'بدون نام';
+};
+
+window.backToStep1 = function() {
+  document.getElementById('step1').style.display = 'block';
+  document.getElementById('step2').style.display = 'none';
+};
+
+window.handlePhotos = function(input) {
+  selectedPhotos = Array.from(input.files).slice(0, 5);
+  const div = document.getElementById('photoPreviews');
+  if (!div) return;
+  div.innerHTML = selectedPhotos.map(f => 
+    `<img src="${URL.createObjectURL(f)}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;">`
+  ).join('');
+};
+
+window.submitReport = async function() {
+  if (!selectedStation) {
+    window.showToast('ایستگاه انتخاب نشده', 'error');
+    return;
+  }
+  
+  const visitor = localStorage.getItem('visitorName') || 'ناشناس';
+  const visitDate = document.getElementById('visitDate').value || new Date().toLocaleDateString('fa-IR');
+  const overallStatus = document.getElementById('overallStatus').value || 'خوب';
+
+  const report = {
+    station_id: selectedStation.id,
+    station_name: selectedStation.name || 'بدون نام',
+    station_code: selectedStation.code || '---',
+    visitor: visitor,
+    visit_date: visitDate,
+    overall_status: overallStatus,
+    created_at: new Date().toISOString(),
+    photos: []
+  };
+
+  if (!isOnline) {
+    let offline = JSON.parse(localStorage.getItem('offline_reports') || '[]');
+    offline.push(report);
+    localStorage.setItem('offline_reports', JSON.stringify(offline));
+    window.showToast('گزارش ذخیره شد (آفلاین)', 'success');
+    window.resetReportForm();
+    return;
+  }
+
+  try {
+    if (selectedPhotos.length > 0) {
+      for (let file of selectedPhotos) {
+        const fileName = `${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabaseClient.storage.from('photos').upload(fileName, file);
+        if (!uploadError) {
+          const { data: urlData } = supabaseClient.storage.from('photos').getPublicUrl(fileName);
+          if (urlData) report.photos.push(urlData.publicUrl);
+        }
+      }
+    }
+
+    const { error } = await supabaseClient.from('reports').insert([report]);
+    if (error) throw error;
+    
+    window.showToast('گزارش ثبت شد ✅', 'success');
+    window.resetReportForm();
+    window.loadReports();
+  } catch(e) {
+    window.showToast('خطا در ثبت: ' + e.message, 'error');
+  }
+};
+
+window.resetReportForm = function() {
+  selectedPhotos = [];
+  document.getElementById('photoPreviews').innerHTML = '';
+  document.getElementById('photoInput').value = '';
+  window.backToStep1();
+};
+
+window.syncOfflineReports = async function() {
+  let offline = JSON.parse(localStorage.getItem('offline_reports') || '[]');
+  if (!offline.length) return;
+  let count = 0;
+  for (let r of offline) {
+    try {
+      const { error } = await supabaseClient.from('reports').insert([r]);
+      if (!error) count++;
+    } catch(e) {}
+  }
+  if (count > 0) {
+    localStorage.removeItem('offline_reports');
+    window.showToast(`${count} گزارش آفلاین ارسال شد`, 'success');
+    window.loadReports();
+  }
+};
+
+window.renderMyReports = function() {
+  const visitor = localStorage.getItem('visitorName') || '';
+  const list = allReports.filter(r => r.visitor === visitor);
+  const container = document.getElementById('myReportsList');
+  if (!container) return;
+  container.innerHTML = list.map(r => `
+    <div class="card">
+      <strong>${r.station_name || 'بدون نام'}</strong><br>
+      ${r.visit_date || '---'} — ${r.overall_status || 'نامشخص'}
+      ${r.photos && r.photos.length > 0 ? `<br>📸 ${r.photos.length} عکس` : ''}
+    </div>
+  `).join('');
+};
+
+window.renderAllReports = function() {
+  const container = document.getElementById('allReportsList');
+  if (!container) return;
+  container.innerHTML = allReports.map(r => `
+    <div class="card">
+      <strong>${r.station_name || 'بدون نام'}</strong><br>
+      بازدیدکننده: ${r.visitor || 'ناشناس'}<br>
+      تاریخ: ${r.visit_date || '---'} — وضعیت: ${r.overall_status || 'نامشخص'}
+      ${r.photos && r.photos.length > 0 ? `<br>📸 ${r.photos.length} عکس` : ''}
+    </div>
+  `).join('');
+};
+
+// ============== توابع دسکتاپ ==============
+
+window.showDesktopScreen = function(id) {
+  document.querySelectorAll('.desktop-main > div').forEach(d => d.style.display = 'none');
+  const target = document.getElementById(id);
+  if (target) target.style.display = 'block';
+  
+  if (id === 'd-map') {
+    setTimeout(window.initMap, 300);
+  }
+};
+
+window.initMap = function() {
+  if (map) {
+    map.invalidateSize();
+    return;
+  }
+  const mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  
+  try {
+    map = L.map('map').setView([35.5, 52], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+    window.renderMarkers();
+  } catch(e) {
+    console.error('❌ خطا در نقشه:', e);
+  }
+};
+
+window.renderMarkers = function() {
+  if (!map) return;
+  allStations.forEach(s => {
+    if (!s.latitude || !s.longitude) return;
+    const marker = L.marker([s.latitude, s.longitude]).addTo(map);
+    marker.bindPopup(`<b>${s.name || 'بدون نام'}</b><br>کد: ${s.code || '---'}`);
+    marker.on('click', () => window.showStationReports(s));
+  });
+};
+
+window.showStationReports = function(s) {
+  const reports = allReports.filter(r => r.station_id === s.id).slice(0, 5);
+  let html = `<h3>${s.name || 'بدون نام'}</h3>`;
+  if (reports.length === 0) {
+    html += '<p>هیچ گزارشی برای این ایستگاه وجود ندارد</p>';
+  } else {
+    reports.forEach(r => {
+      html += `<div style="padding:10px;background:#f8f9fa;margin:6px 0;border-radius:8px;">
+        ${r.visit_date || '---'} - ${r.visitor || 'ناشناس'} - ${r.overall_status || 'نامشخص'}
+      </div>`;
+    });
+  }
+  const container = document.getElementById('map-station-info');
+  if (container) container.innerHTML = html;
+};
+
+window.renderStationsTable = function() {
+  const container = document.getElementById('stationsTableBodyContent');
+  if (!container) return;
+  container.innerHTML = allStations.map(s => `
+    <tr>
+      <td>${s.name || 'بدون نام'}</td>
+      <td>${s.code || '---'}</td>
+      <td>${s.type || '---'}</td>
+      <td>${s.province || '---'}</td>
+      <td>
+        <button class="btn btn-primary" onclick="window.editStation('${s.id}')" style="padding:4px 12px;font-size:12px;">ویرایش</button>
+        <button class="btn btn-danger" onclick="window.deleteStation('${s.id}')" style="padding:4px 12px;font-size:12px;">حذف</button>
+      </td>
+    </tr>
+  `).join('');
+};
+
+// ============== مدیریت ایستگاه‌ها ==============
+
+window.openAddStationModal = function(editId = null) {
+  document.getElementById('editId').value = editId || '';
+  document.getElementById('modalTitle').textContent = editId ? 'ویرایش ایستگاه' : 'افزودن ایستگاه';
+  
+  if (editId) {
+    const station = allStations.find(s => s.id === editId);
+    if (station) {
+      document.getElementById('stName').value = station.name || '';
+      document.getElementById('stCode').value = station.code || '';
+      document.getElementById('stType').value = station.type || 'weather';
+      document.getElementById('stProvince').value = station.province || '';
+      document.getElementById('stLat').value = station.latitude || '';
+      document.getElementById('stLon').value = station.longitude || '';
+    }
+  } else {
+    document.getElementById('stName').value = '';
+    document.getElementById('stCode').value = '';
+    document.getElementById('stType').value = 'weather';
+    document.getElementById('stProvince').value = '';
+    document.getElementById('stLat').value = '';
+    document.getElementById('stLon').value = '';
+  }
+  
+  document.getElementById('stationModal').style.display = 'flex';
+};
+
+window.editStation = function(id) {
+  window.openAddStationModal(id);
+};
+
+window.deleteStation = async function(id) {
+  if (!confirm('آیا از حذف این ایستگاه اطمینان دارید؟')) return;
+  try {
+    const { error } = await supabaseClient.from('stations').delete().eq('id', id);
+    if (error) throw error;
+    window.showToast('ایستگاه حذف شد', 'success');
+    window.loadStations();
+  } catch(e) {
+    window.showToast('خطا در حذف: ' + e.message, 'error');
+  }
+};
+
+window.saveStation = async function() {
+  const data = {
+    name: document.getElementById('stName').value,
+    code: document.getElementById('stCode').value,
+    type: document.getElementById('stType').value,
+    province: document.getElementById('stProvince').value,
+    latitude: parseFloat(document.getElementById('stLat').value) || null,
+    longitude: parseFloat(document.getElementById('stLon').value) || null
+  };
+
+  if (!data.name) {
+    window.showToast('لطفاً نام ایستگاه را وارد کنید', 'error');
+    return;
+  }
+
+  const editId = document.getElementById('editId').value;
+  try {
+    if (editId) {
+      const { error } = await supabaseClient.from('stations').update(data).eq('id', editId);
+      if (error) throw error;
+      window.showToast('ایستگاه ویرایش شد ✅', 'success');
+    } else {
+      const { error } = await supabaseClient.from('stations').insert([data]);
+      if (error) throw error;
+      window.showToast('ایستگاه اضافه شد ✅', 'success');
+    }
+    window.closeModal();
+    window.loadStations();
+  } catch(e) {
+    window.showToast('خطا: ' + e.message, 'error');
+  }
+};
+
+window.closeModal = function() {
+  document.getElementById('stationModal').style.display = 'none';
+};
+
+window.importExcel = function(input) {
+  if (!input.files || !input.files[0]) {
+    window.showToast('لطفاً یک فایل Excel انتخاب کنید', 'error');
+    return;
+  }
+  window.showToast('فایل Excel دریافت شد. قابلیت پردازش در نسخه بعدی اضافه می‌شود.', 'success');
+  input.value = '';
+};
+
+// ============== توابع کمکی ==============
+
+window.showToast = function(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.background = type === 'success' ? '#27ae60' : '#e74c3c';
+  t.style.display = 'block';
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.style.display = 'none', 3500);
+};
+
+window.switchToDesktop = function() { 
+  alert('برای ورود به پنل مدیریت، از صفحه ورود استفاده کنید.');
+};
+
+window.logout = function() {
+  try {
+    supabaseClient.auth.signOut();
+  } catch(e) {}
+  location.reload();
+};
+
+// ============== کیبورد ==============
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    window.closeModal();
+  }
+});
+
+console.log('✅ سامانه بازدید ایستگاه‌ها با موفقیت بارگذاری شد!');
+console.log('📡 وضعیت اتصال:', isOnline ? 'آنلاین' : 'آفلاین');
+</script>
+</body>
+</html>
