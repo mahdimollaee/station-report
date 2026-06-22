@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>سامانه بازدید ایستگاه‌ها</title>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -55,8 +55,8 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
       <h2 style="text-align:center;color:var(--primary);">پنل مدیریت</h2>
       <input type="email" id="email" class="form-control" placeholder="ایمیل">
       <input type="password" id="password" class="form-control" placeholder="رمز عبور">
-      <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="window.loginUser()">ورود</button>
-      <button class="btn" style="width:100%;margin-top:10px;background:#eee;" onclick="window.skipToMobile()">ورود به نسخه موبایل</button>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="loginUser()">ورود</button>
+      <button class="btn" style="width:100%;margin-top:10px;background:#eee;" onclick="skipToMobile()">ورود به نسخه موبایل</button>
     </div>
   </div>
 
@@ -68,15 +68,15 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
     </div>
 
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="window.showTab('home')">🏠 خانه</button>
-      <button class="nav-tab" onclick="window.showTab('report')">📝 ثبت گزارش</button>
-      <button class="nav-tab" onclick="window.showTab('myreports')">📋 گزارش‌های من</button>
+      <button class="nav-tab active" onclick="showTab('home')">🏠 خانه</button>
+      <button class="nav-tab" onclick="showTab('report')">📝 ثبت گزارش</button>
+      <button class="nav-tab" onclick="showTab('myreports')">📋 گزارش‌های من</button>
     </div>
 
     <div id="screen-home" class="screen active">
       <div class="card">
         <label>نام و نام خانوادگی</label>
-        <input type="text" id="visitorName" class="form-control" oninput="window.saveVisitorName()" placeholder="نام خود را وارد کنید">
+        <input type="text" id="visitorName" class="form-control" oninput="saveVisitorName()" placeholder="نام خود را وارد کنید">
       </div>
     </div>
 
@@ -84,14 +84,14 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
       <div id="step1">
         <div class="card">
           <h3>انتخاب ایستگاه</h3>
-          <input type="text" class="form-control" placeholder="جستجو..." oninput="window.filterStations(this.value)">
+          <input type="text" class="form-control" placeholder="جستجو..." oninput="filterStations(this.value)">
           <div id="stationsList"></div>
         </div>
       </div>
       <div id="step2" style="display:none;">
         <div class="card">
           <h3 id="selectedStationName"></h3>
-          <button class="btn" onclick="window.backToStep1()" style="background:#eee;">تغییر ایستگاه</button>
+          <button class="btn" onclick="backToStep1()" style="background:#eee;">تغییر ایستگاه</button>
         </div>
         <div class="card">
           <label>تاریخ بازدید</label>
@@ -107,10 +107,10 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
         </div>
         <div class="card">
           <label>عکس (حداکثر ۵)</label>
-          <input type="file" id="photoInput" multiple accept="image/*" onchange="window.handlePhotos(this)">
+          <input type="file" id="photoInput" multiple accept="image/*" onchange="handlePhotos(this)">
           <div id="photoPreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
         </div>
-        <button class="btn btn-success" style="width:100%;padding:14px;font-size:16px;" onclick="window.submitReport()">✅ ثبت و ارسال گزارش</button>
+        <button class="btn btn-success" style="width:100%;padding:14px;font-size:16px;" onclick="submitReport()">✅ ثبت و ارسال گزارش</button>
       </div>
     </div>
 
@@ -122,18 +122,18 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
   <!-- Desktop Admin -->
   <div id="desktopPanel" class="screen">
     <div class="desktop-sidebar">
-      <button class="sidebar-item active" onclick="window.showDesktopScreen('d-stations')">📍 مدیریت ایستگاه‌ها</button>
-      <button class="sidebar-item" onclick="window.showDesktopScreen('d-map')">🗺️ نقشه ایستگاه‌ها</button>
-      <button class="sidebar-item" onclick="window.showDesktopScreen('d-reports')">📋 همه گزارش‌ها</button>
-      <button class="sidebar-item" onclick="window.logout()" style="color:#ff6b6b;">🚪 خروج</button>
+      <button class="sidebar-item active" onclick="showDesktopScreen('d-stations')">📍 مدیریت ایستگاه‌ها</button>
+      <button class="sidebar-item" onclick="showDesktopScreen('d-map')">🗺️ نقشه ایستگاه‌ها</button>
+      <button class="sidebar-item" onclick="showDesktopScreen('d-reports')">📋 همه گزارش‌ها</button>
+      <button class="sidebar-item" onclick="logout()" style="color:#ff6b6b;">🚪 خروج</button>
     </div>
     <div class="desktop-main">
       <!-- Stations -->
       <div id="d-stations" class="screen active">
         <h2>مدیریت ایستگاه‌ها</h2>
-        <button class="btn btn-primary" onclick="window.openAddStationModal()">➕ افزودن ایستگاه</button>
+        <button class="btn btn-primary" onclick="openAddStationModal()">➕ افزودن ایستگاه</button>
         <button class="btn" onclick="document.getElementById('excelInput').click()" style="background:#27ae60;color:white;">📊 آپلود Excel</button>
-        <input type="file" id="excelInput" style="display:none" onchange="window.importExcel(this)">
+        <input type="file" id="excelInput" style="display:none" onchange="importExcel(this)">
         <table class="desktop-table">
           <thead>
             <tr>
@@ -180,8 +180,8 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
     <input type="number" id="stLat" class="form-control" placeholder="عرض جغرافیایی">
     <input type="number" id="stLon" class="form-control" placeholder="طول جغرافیایی">
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="btn btn-success" onclick="window.saveStation()">ذخیره</button>
-      <button class="btn" onclick="window.closeModal()" style="background:#eee;">انصراف</button>
+      <button class="btn btn-success" onclick="saveStation()">ذخیره</button>
+      <button class="btn" onclick="closeModal()" style="background:#eee;">انصراف</button>
     </div>
   </div>
 </div>
@@ -190,13 +190,8 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
 
 <script>
 // ============== تعریف Supabase ==============
-const SUPABASE_URL = 'https://werfmylhtmknecsyikvp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlcmZteWxodG1rbmVjc3lpa3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTYwNzAsImV4cCI6MjA5NzY5MjA3MH0.bCenZffv_P9bD-A7T_iezkbuO4mBnzky-RgkiTuQCoo';
-
-// بررسی وجود Supabase
-if (typeof supabase === 'undefined') {
-  console.error('❌ Supabase لود نشد!');
-}
+const SUPABASE_URL = 'https://wzkoxmiskougznduoktb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6a294bWlza291Z3puZHVva3RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMDUwNjksImV4cCI6MjA5NzY4MTA2OX0.-wD6o0qfrjaul9UrhnORLs3IPlYfUOt11juwrtqyf7k';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -208,141 +203,132 @@ let selectedPhotos = [];
 let map = null;
 let isOnline = navigator.onLine;
 
-// ============== توابع عمومی ==============
-
-// توابع لاگین
-window.loginUser = async function() {
+// ============== توابع لاگین ==============
+function loginUser() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   
   if (!email || !password) {
-    window.showToast('لطفاً ایمیل و رمز عبور را وارد کنید', 'error');
+    showToast('لطفاً ایمیل و رمز عبور را وارد کنید', 'error');
     return;
   }
 
-  try {
-    console.log('🔐 در حال ورود با:', email);
-    
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-    
+  supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password
+  }).then(({ data, error }) => {
     if (error) {
       console.error('❌ خطای ورود:', error);
-      window.showToast('خطا: ' + error.message, 'error');
+      showToast('خطا: ' + error.message, 'error');
       return;
     }
     
     console.log('✅ ورود موفق:', data);
-    
     document.getElementById('loginScreen').classList.remove('active');
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('desktopPanel').style.display = 'flex';
     document.getElementById('desktopPanel').classList.add('active');
-    
-    window.initDesktop();
-    window.showToast('ورود موفق ✅', 'success');
-    
-  } catch(e) {
+    initDesktop();
+    showToast('ورود موفق ✅', 'success');
+  }).catch(e => {
     console.error('❌ خطا:', e);
-    window.showToast('خطا: ' + e.message, 'error');
-  }
-};
+    showToast('خطا: ' + e.message, 'error');
+  });
+}
 
-window.skipToMobile = function() {
+function skipToMobile() {
   document.getElementById('loginScreen').classList.remove('active');
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mobileApp').style.display = 'block';
   document.getElementById('mobileApp').classList.add('active');
-  window.initMobile();
-};
+  initMobile();
+}
 
-// توابع اولیه
-window.initMobile = function() { 
-  window.loadStations(); 
-  window.loadReports(); 
-  window.setDefaultDateTime(); 
+// ============== توابع اولیه ==============
+function initMobile() { 
+  loadStations(); 
+  loadReports(); 
+  setDefaultDateTime(); 
   const savedName = localStorage.getItem('visitorName') || '';
   document.getElementById('visitorName').value = savedName;
-};
+}
 
-window.initDesktop = function() { 
-  window.loadStations(); 
-  window.loadReports(); 
-  setTimeout(window.initMap, 500);
-};
+function initDesktop() { 
+  loadStations(); 
+  loadReports(); 
+  setTimeout(initMap, 500);
+}
 
 // ============== راه‌اندازی اولیه ==============
 window.onload = function() {
-  window.setupOnlineDetection();
+  setupOnlineDetection();
   document.getElementById('loginScreen').classList.add('active');
 };
 
 // ============== توابع اصلی ==============
 
-window.setupOnlineDetection = function() {
+function setupOnlineDetection() {
   const banner = document.getElementById('offlineBanner');
   function update() {
     isOnline = navigator.onLine;
     if (banner) {
       banner.style.display = isOnline ? 'none' : 'block';
     }
-    if (isOnline) window.syncOfflineReports();
+    if (isOnline) syncOfflineReports();
   }
   window.addEventListener('online', update);
   window.addEventListener('offline', update);
   update();
-};
+}
 
-window.showTab = function(tab) {
+function showTab(tab) {
   document.querySelectorAll('#mobileApp .screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById('screen-' + tab);
   if (target) target.classList.add('active');
-};
+}
 
-window.saveVisitorName = function() { 
+function saveVisitorName() { 
   const name = document.getElementById('visitorName').value;
   localStorage.setItem('visitorName', name); 
-};
+}
 
-window.setDefaultDateTime = function() { 
+function setDefaultDateTime() { 
   const now = new Date();
   const dateStr = now.toLocaleDateString('fa-IR');
   const el = document.getElementById('visitDate');
   if (el) el.value = dateStr; 
-};
+}
 
-window.loadStations = async function() {
-  try {
-    const { data, error } = await supabaseClient.from('stations').select('*').order('name');
-    if (error) throw error;
+function loadStations() {
+  supabaseClient.from('stations').select('*').order('name').then(({ data, error }) => {
+    if (error) {
+      console.error('❌ خطا در بارگذاری ایستگاه‌ها:', error);
+      return;
+    }
     allStations = data || [];
-    window.renderStationsList();
-    window.renderStationsTable();
-    if (map) window.renderMarkers();
-  } catch(e) {
-    console.error('❌ خطا در بارگذاری ایستگاه‌ها:', e);
-  }
-};
+    renderStationsList();
+    renderStationsTable();
+    if (map) renderMarkers();
+  });
+}
 
-window.loadReports = async function() {
-  try {
-    const { data, error } = await supabaseClient.from('reports').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
+function loadReports() {
+  supabaseClient.from('reports').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
+    if (error) {
+      console.error('❌ خطا در بارگذاری گزارش‌ها:', error);
+      return;
+    }
     allReports = data || [];
-    window.renderMyReports();
-    window.renderAllReports();
-  } catch(e) {
-    console.error('❌ خطا در بارگذاری گزارش‌ها:', e);
-  }
-};
+    renderMyReports();
+    renderAllReports();
+  });
+}
 
-window.filterStations = function(filter) {
-  window.renderStationsList(filter);
-};
+function filterStations(filter) {
+  renderStationsList(filter);
+}
 
-window.renderStationsList = function(filter = '') {
+function renderStationsList(filter = '') {
   const filtered = allStations.filter(s => 
     (s.name && s.name.includes(filter)) || 
     (s.code && s.code.includes(filter))
@@ -350,37 +336,37 @@ window.renderStationsList = function(filter = '') {
   const container = document.getElementById('stationsList');
   if (!container) return;
   container.innerHTML = filtered.map(s => `
-    <div class="card" onclick="window.selectStation('${s.id}')" style="cursor:pointer;">
+    <div class="card" onclick="selectStation('${s.id}')" style="cursor:pointer;">
       <strong>${s.name || 'بدون نام'}</strong><br>کد: ${s.code || '---'}
     </div>
   `).join('');
-};
+}
 
-window.selectStation = function(id) {
+function selectStation(id) {
   selectedStation = allStations.find(s => s.id === id);
   if (!selectedStation) return;
   document.getElementById('step1').style.display = 'none';
   document.getElementById('step2').style.display = 'block';
   document.getElementById('selectedStationName').textContent = selectedStation.name || 'بدون نام';
-};
+}
 
-window.backToStep1 = function() {
+function backToStep1() {
   document.getElementById('step1').style.display = 'block';
   document.getElementById('step2').style.display = 'none';
-};
+}
 
-window.handlePhotos = function(input) {
+function handlePhotos(input) {
   selectedPhotos = Array.from(input.files).slice(0, 5);
   const div = document.getElementById('photoPreviews');
   if (!div) return;
   div.innerHTML = selectedPhotos.map(f => 
     `<img src="${URL.createObjectURL(f)}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;">`
   ).join('');
-};
+}
 
-window.submitReport = async function() {
+function submitReport() {
   if (!selectedStation) {
-    window.showToast('ایستگاه انتخاب نشده', 'error');
+    showToast('ایستگاه انتخاب نشده', 'error');
     return;
   }
   
@@ -403,59 +389,62 @@ window.submitReport = async function() {
     let offline = JSON.parse(localStorage.getItem('offline_reports') || '[]');
     offline.push(report);
     localStorage.setItem('offline_reports', JSON.stringify(offline));
-    window.showToast('گزارش ذخیره شد (آفلاین)', 'success');
-    window.resetReportForm();
+    showToast('گزارش ذخیره شد (آفلاین)', 'success');
+    resetReportForm();
     return;
   }
 
-  try {
-    if (selectedPhotos.length > 0) {
-      for (let file of selectedPhotos) {
-        const fileName = `${Date.now()}_${file.name}`;
-        const { error: uploadError } = await supabaseClient.storage.from('photos').upload(fileName, file);
-        if (!uploadError) {
+  // آنلاین
+  const uploadPromises = selectedPhotos.map(file => {
+    const fileName = `${Date.now()}_${file.name}`;
+    return supabaseClient.storage.from('photos').upload(fileName, file)
+      .then(({ error }) => {
+        if (!error) {
           const { data: urlData } = supabaseClient.storage.from('photos').getPublicUrl(fileName);
           if (urlData) report.photos.push(urlData.publicUrl);
         }
-      }
-    }
+      });
+  });
 
-    const { error } = await supabaseClient.from('reports').insert([report]);
+  Promise.all(uploadPromises).then(() => {
+    return supabaseClient.from('reports').insert([report]);
+  }).then(({ error }) => {
     if (error) throw error;
-    
-    window.showToast('گزارش ثبت شد ✅', 'success');
-    window.resetReportForm();
-    window.loadReports();
-  } catch(e) {
-    window.showToast('خطا در ثبت: ' + e.message, 'error');
-  }
-};
+    showToast('گزارش ثبت شد ✅', 'success');
+    resetReportForm();
+    loadReports();
+  }).catch(e => {
+    showToast('خطا در ثبت: ' + e.message, 'error');
+  });
+}
 
-window.resetReportForm = function() {
+function resetReportForm() {
   selectedPhotos = [];
   document.getElementById('photoPreviews').innerHTML = '';
   document.getElementById('photoInput').value = '';
-  window.backToStep1();
-};
+  backToStep1();
+}
 
-window.syncOfflineReports = async function() {
+function syncOfflineReports() {
   let offline = JSON.parse(localStorage.getItem('offline_reports') || '[]');
   if (!offline.length) return;
   let count = 0;
-  for (let r of offline) {
-    try {
-      const { error } = await supabaseClient.from('reports').insert([r]);
+  const promises = offline.map(r => {
+    return supabaseClient.from('reports').insert([r]).then(({ error }) => {
       if (!error) count++;
-    } catch(e) {}
-  }
-  if (count > 0) {
-    localStorage.removeItem('offline_reports');
-    window.showToast(`${count} گزارش آفلاین ارسال شد`, 'success');
-    window.loadReports();
-  }
-};
+    }).catch(() => {});
+  });
+  
+  Promise.all(promises).then(() => {
+    if (count > 0) {
+      localStorage.removeItem('offline_reports');
+      showToast(`${count} گزارش آفلاین ارسال شد`, 'success');
+      loadReports();
+    }
+  });
+}
 
-window.renderMyReports = function() {
+function renderMyReports() {
   const visitor = localStorage.getItem('visitorName') || '';
   const list = allReports.filter(r => r.visitor === visitor);
   const container = document.getElementById('myReportsList');
@@ -467,9 +456,9 @@ window.renderMyReports = function() {
       ${r.photos && r.photos.length > 0 ? `<br>📸 ${r.photos.length} عکس` : ''}
     </div>
   `).join('');
-};
+}
 
-window.renderAllReports = function() {
+function renderAllReports() {
   const container = document.getElementById('allReportsList');
   if (!container) return;
   container.innerHTML = allReports.map(r => `
@@ -480,21 +469,21 @@ window.renderAllReports = function() {
       ${r.photos && r.photos.length > 0 ? `<br>📸 ${r.photos.length} عکس` : ''}
     </div>
   `).join('');
-};
+}
 
 // ============== توابع دسکتاپ ==============
 
-window.showDesktopScreen = function(id) {
+function showDesktopScreen(id) {
   document.querySelectorAll('.desktop-main > div').forEach(d => d.style.display = 'none');
   const target = document.getElementById(id);
   if (target) target.style.display = 'block';
   
   if (id === 'd-map') {
-    setTimeout(window.initMap, 300);
+    setTimeout(initMap, 300);
   }
-};
+}
 
-window.initMap = function() {
+function initMap() {
   if (map) {
     map.invalidateSize();
     return;
@@ -507,23 +496,23 @@ window.initMap = function() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(map);
-    window.renderMarkers();
+    renderMarkers();
   } catch(e) {
     console.error('❌ خطا در نقشه:', e);
   }
-};
+}
 
-window.renderMarkers = function() {
+function renderMarkers() {
   if (!map) return;
   allStations.forEach(s => {
     if (!s.latitude || !s.longitude) return;
     const marker = L.marker([s.latitude, s.longitude]).addTo(map);
     marker.bindPopup(`<b>${s.name || 'بدون نام'}</b><br>کد: ${s.code || '---'}`);
-    marker.on('click', () => window.showStationReports(s));
+    marker.on('click', () => showStationReports(s));
   });
-};
+}
 
-window.showStationReports = function(s) {
+function showStationReports(s) {
   const reports = allReports.filter(r => r.station_id === s.id).slice(0, 5);
   let html = `<h3>${s.name || 'بدون نام'}</h3>`;
   if (reports.length === 0) {
@@ -537,9 +526,9 @@ window.showStationReports = function(s) {
   }
   const container = document.getElementById('map-station-info');
   if (container) container.innerHTML = html;
-};
+}
 
-window.renderStationsTable = function() {
+function renderStationsTable() {
   const container = document.getElementById('stationsTableBodyContent');
   if (!container) return;
   container.innerHTML = allStations.map(s => `
@@ -549,16 +538,16 @@ window.renderStationsTable = function() {
       <td>${s.type || '---'}</td>
       <td>${s.province || '---'}</td>
       <td>
-        <button class="btn btn-primary" onclick="window.editStation('${s.id}')" style="padding:4px 12px;font-size:12px;">ویرایش</button>
-        <button class="btn btn-danger" onclick="window.deleteStation('${s.id}')" style="padding:4px 12px;font-size:12px;">حذف</button>
+        <button class="btn btn-primary" onclick="editStation('${s.id}')" style="padding:4px 12px;font-size:12px;">ویرایش</button>
+        <button class="btn btn-danger" onclick="deleteStation('${s.id}')" style="padding:4px 12px;font-size:12px;">حذف</button>
       </td>
     </tr>
   `).join('');
-};
+}
 
 // ============== مدیریت ایستگاه‌ها ==============
 
-window.openAddStationModal = function(editId = null) {
+function openAddStationModal(editId = null) {
   document.getElementById('editId').value = editId || '';
   document.getElementById('modalTitle').textContent = editId ? 'ویرایش ایستگاه' : 'افزودن ایستگاه';
   
@@ -582,25 +571,25 @@ window.openAddStationModal = function(editId = null) {
   }
   
   document.getElementById('stationModal').style.display = 'flex';
-};
+}
 
-window.editStation = function(id) {
-  window.openAddStationModal(id);
-};
+function editStation(id) {
+  openAddStationModal(id);
+}
 
-window.deleteStation = async function(id) {
+function deleteStation(id) {
   if (!confirm('آیا از حذف این ایستگاه اطمینان دارید؟')) return;
-  try {
-    const { error } = await supabaseClient.from('stations').delete().eq('id', id);
-    if (error) throw error;
-    window.showToast('ایستگاه حذف شد', 'success');
-    window.loadStations();
-  } catch(e) {
-    window.showToast('خطا در حذف: ' + e.message, 'error');
-  }
-};
+  supabaseClient.from('stations').delete().eq('id', id).then(({ error }) => {
+    if (error) {
+      showToast('خطا در حذف: ' + error.message, 'error');
+      return;
+    }
+    showToast('ایستگاه حذف شد', 'success');
+    loadStations();
+  });
+}
 
-window.saveStation = async function() {
+function saveStation() {
   const data = {
     name: document.getElementById('stName').value,
     code: document.getElementById('stCode').value,
@@ -611,44 +600,42 @@ window.saveStation = async function() {
   };
 
   if (!data.name) {
-    window.showToast('لطفاً نام ایستگاه را وارد کنید', 'error');
+    showToast('لطفاً نام ایستگاه را وارد کنید', 'error');
     return;
   }
 
   const editId = document.getElementById('editId').value;
-  try {
-    if (editId) {
-      const { error } = await supabaseClient.from('stations').update(data).eq('id', editId);
-      if (error) throw error;
-      window.showToast('ایستگاه ویرایش شد ✅', 'success');
-    } else {
-      const { error } = await supabaseClient.from('stations').insert([data]);
-      if (error) throw error;
-      window.showToast('ایستگاه اضافه شد ✅', 'success');
+  const operation = editId 
+    ? supabaseClient.from('stations').update(data).eq('id', editId)
+    : supabaseClient.from('stations').insert([data]);
+  
+  operation.then(({ error }) => {
+    if (error) {
+      showToast('خطا: ' + error.message, 'error');
+      return;
     }
-    window.closeModal();
-    window.loadStations();
-  } catch(e) {
-    window.showToast('خطا: ' + e.message, 'error');
-  }
-};
+    showToast(editId ? 'ایستگاه ویرایش شد ✅' : 'ایستگاه اضافه شد ✅', 'success');
+    closeModal();
+    loadStations();
+  });
+}
 
-window.closeModal = function() {
+function closeModal() {
   document.getElementById('stationModal').style.display = 'none';
-};
+}
 
-window.importExcel = function(input) {
+function importExcel(input) {
   if (!input.files || !input.files[0]) {
-    window.showToast('لطفاً یک فایل Excel انتخاب کنید', 'error');
+    showToast('لطفاً یک فایل Excel انتخاب کنید', 'error');
     return;
   }
-  window.showToast('فایل Excel دریافت شد. قابلیت پردازش در نسخه بعدی اضافه می‌شود.', 'success');
+  showToast('فایل Excel دریافت شد. قابلیت پردازش در نسخه بعدی اضافه می‌شود.', 'success');
   input.value = '';
-};
+}
 
 // ============== توابع کمکی ==============
 
-window.showToast = function(msg, type = 'success') {
+function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   if (!t) return;
   t.textContent = msg;
@@ -656,23 +643,21 @@ window.showToast = function(msg, type = 'success') {
   t.style.display = 'block';
   clearTimeout(t._timeout);
   t._timeout = setTimeout(() => t.style.display = 'none', 3500);
-};
+}
 
-window.switchToDesktop = function() { 
+function switchToDesktop() { 
   alert('برای ورود به پنل مدیریت، از صفحه ورود استفاده کنید.');
-};
+}
 
-window.logout = function() {
-  try {
-    supabaseClient.auth.signOut();
-  } catch(e) {}
+function logout() {
+  supabaseClient.auth.signOut().catch(() => {});
   location.reload();
-};
+}
 
 // ============== کیبورد ==============
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    window.closeModal();
+    closeModal();
   }
 });
 
