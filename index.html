@@ -23,7 +23,6 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
 .screen.active { display: block; }
 .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
 .form-control { width: 100%; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-family: 'Vazirmatn', sans-serif; }
-.form-control:focus { outline: none; border-color: var(--primary); }
 .btn { padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-family: 'Vazirmatn', sans-serif; }
 .btn-primary { background: var(--primary); color: white; }
 .btn-success { background: var(--accent); color: white; }
@@ -43,8 +42,6 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
 #desktopPanel { display: none; flex-direction: row; height: 100vh; }
 #mobileApp { display: none; }
 #loginScreen { display: block; }
-.report-photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.report-photos img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
 </style>
 </head>
 <body>
@@ -101,8 +98,12 @@ body { font-family: 'Vazirmatn', sans-serif; background: #f0f4f8; color: #1c2833
           <input type="text" id="visitDate" class="form-control">
         </div>
         <div class="card">
-          <label>توضیحات کارشناس</label>
-          <textarea id="expertDescription" class="form-control" rows="4" placeholder="مشاهدات، مشکلات، پیشنهادات و ... را وارد کنید" style="resize:vertical;"></textarea>
+          <label>وضعیت کلی</label>
+          <select id="overallStatus" class="form-control">
+            <option value="خوب">✅ خوب</option>
+            <option value="متوسط">⚠️ متوسط</option>
+            <option value="بد">❌ بد</option>
+          </select>
         </div>
         <div class="card">
           <label>عکس (حداکثر ۵)</label>
@@ -371,7 +372,7 @@ function submitReport() {
   
   const visitor = localStorage.getItem('visitorName') || 'ناشناس';
   const visitDate = document.getElementById('visitDate').value || new Date().toLocaleDateString('fa-IR');
-  const description = document.getElementById('expertDescription').value || 'بدون توضیحات';
+  const overallStatus = document.getElementById('overallStatus').value || 'خوب';
 
   const report = {
     station_id: selectedStation.id,
@@ -379,7 +380,7 @@ function submitReport() {
     station_code: selectedStation.code || '---',
     visitor: visitor,
     visit_date: visitDate,
-    description: description,
+    overall_status: overallStatus,
     created_at: new Date().toISOString(),
     photos: []
   };
@@ -421,7 +422,6 @@ function resetReportForm() {
   selectedPhotos = [];
   document.getElementById('photoPreviews').innerHTML = '';
   document.getElementById('photoInput').value = '';
-  document.getElementById('expertDescription').value = '';
   backToStep1();
 }
 
@@ -452,9 +452,8 @@ function renderMyReports() {
   container.innerHTML = list.map(r => `
     <div class="card">
       <strong>${r.station_name || 'بدون نام'}</strong><br>
-      تاریخ: ${r.visit_date || '---'}<br>
-      توضیحات: ${r.description || 'بدون توضیحات'}<br>
-      ${r.photos && r.photos.length > 0 ? `<div class="report-photos">${r.photos.map(p => `<img src="${p}" alt="عکس">`).join('')}</div>` : ''}
+      ${r.visit_date || '---'} — ${r.overall_status || 'نامشخص'}
+      ${r.photos && r.photos.length > 0 ? `<br>📸 ${r.photos.length} عکس` : ''}
     </div>
   `).join('');
 }
@@ -466,9 +465,8 @@ function renderAllReports() {
     <div class="card">
       <strong>${r.station_name || 'بدون نام'}</strong><br>
       بازدیدکننده: ${r.visitor || 'ناشناس'}<br>
-      تاریخ: ${r.visit_date || '---'}<br>
-      توضیحات: ${r.description || 'بدون توضیحات'}<br>
-      ${r.photos && r.photos.length > 0 ? `<div class="report-photos">${r.photos.map(p => `<img src="${p}" alt="عکس">`).join('')}</div>` : ''}
+      تاریخ: ${r.visit_date || '---'} — وضعیت: ${r.overall_status || 'نامشخص'}
+      ${r.photos && r.photos.length > 0 ? `<br>📸 ${r.photos.length} عکس` : ''}
     </div>
   `).join('');
 }
@@ -522,9 +520,7 @@ function showStationReports(s) {
   } else {
     reports.forEach(r => {
       html += `<div style="padding:10px;background:#f8f9fa;margin:6px 0;border-radius:8px;">
-        ${r.visit_date || '---'} - ${r.visitor || 'ناشناس'}<br>
-        <strong>توضیحات:</strong> ${r.description || 'بدون توضیحات'}
-        ${r.photos && r.photos.length > 0 ? `<br><div class="report-photos">${r.photos.map(p => `<img src="${p}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;">`).join('')}</div>` : ''}
+        ${r.visit_date || '---'} - ${r.visitor || 'ناشناس'} - ${r.overall_status || 'نامشخص'}
       </div>`;
     });
   }
